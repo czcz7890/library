@@ -1,0 +1,156 @@
+import java.util.List;
+import java.util.ArrayList;
+
+public interface Sorter<E extends Comparable<E>> {
+    /**
+     * sorts a list in the order specified in the input.
+     * @param eList the lists that is being sorted
+     * @param order the order of sorting (ascending or descending)
+     */
+    void sort(List<E> eList, Order order);
+
+}
+
+public enum Order {
+    ASCENDING, DESCENDING;
+
+}
+
+public class InsertionSorter<E extends Comparable<E>> implements Sorter<E>{
+    @Override
+    public void sort(List<E> eList, Order order){
+        for(int i = 1; i < eList.size(); i++){
+            int j = i-1;
+            E k = eList.get(i);
+            while((j >= 0) && (k.compareTo(eList.get(j)) < 0) && (order.equals(Order.ASCENDING))){
+                eList.set(j+1, eList.get(j));
+                j--;
+            }
+            while((j >= 0) && (k.compareTo(eList.get(j)) > 0) && (order.equals(Order.DESCENDING))){
+                eList.set(j+1, eList.get(j));
+                j--;
+            }
+            eList.set(j+1, k);
+        }
+    }
+}
+
+public class MergeSorter<E extends Comparable<E>> implements Sorter<E> {
+    @Override
+    public void sort(List<E> eList, Order order){
+        List<E> result;
+        result = mergesort(eList, order);
+        for(int i = 0; i < result.size(); i++) {
+            eList.set(i, result.get(i));
+        }
+    }
+    private List<E> mergesort(List<E> tList, Order order){
+        if(tList.size() <= 1){
+            return tList;
+        }
+        List<E> left = new ArrayList<E>();
+        List<E> right = new ArrayList<E>();
+        for(int i = 0; i < tList.size(); i++){
+            E k = tList.get(i);
+            if(i < tList.size()/2){
+                left.add(k);
+            }else{
+                right.add(k);
+            }
+        }
+
+        left = mergesort(left, order);
+        right = mergesort(right, order);
+        return merge(left, right, order);
+    }
+    private List<E> merge(List<E> left, List<E> right, Order order){
+        List<E> result = new ArrayList<E>();
+
+        while(!left.isEmpty() && !right.isEmpty()){
+            if(order.equals(Order.ASCENDING)) {
+                if (left.get(0).compareTo(right.get(0)) <= 0) {
+                    result.add(left.get(0));
+                    left.remove(left.get(0));
+                }else {
+                    result.add(right.get(0));
+                    right.remove(right.get(0));
+                }
+            }if(order.equals(Order.DESCENDING)){
+                if (left.get(0).compareTo(right.get(0)) >= 0) {
+                    result.add(left.get(0));
+                    left.remove(left.get(0));
+                }else {
+                    result.add(right.get(0));
+                    right.remove(right.get(0));
+                }
+            }
+
+        }
+        while(!left.isEmpty()){
+            result.add(left.get(0));
+            left.remove(left.get(0));
+        }
+        while(!right.isEmpty()){
+            result.add(right.get(0));
+            right.remove(right.get(0));
+        }
+        return result;
+    }
+
+}
+
+public class GapSorter<E extends Comparable<E>> implements Sorter<E>{
+    @Override
+    public void sort(List<E> eList, Order order){
+        int gap = eList.size()/2;
+        while(gap > 0){
+            if(gap == 1){
+
+                for(int i = 1; i < eList.size(); i++){
+                    int j = i-1;
+                    E k = eList.get(i);
+                    while((j >= 0) && (k.compareTo(eList.get(j)) < 0) && (order.equals(Order.ASCENDING))){
+                        eList.set(j+1, eList.get(j));
+                        j--;
+                    }
+                    while((j >= 0) && (k.compareTo(eList.get(j)) > 0) && (order.equals(Order.DESCENDING))){
+                        eList.set(j+1, eList.get(j));
+                        j--;
+                    }
+                    eList.set(j+1, k);
+                }
+
+                /*
+                for(int i = 0; i < eList.size()/2; i++){
+                    E k = eList.get(2*i);
+                    if(k.compareTo(eList.get(2*i+1)) > 0 && (order.equals(Order.ASCENDING))){
+                        eList.set(2*i, eList.get(2*i+1));
+                        eList.set(2*i+1, k);
+                    }
+                    if(k.compareTo(eList.get(2*i+1)) < 0 && (order.equals(Order.DESCENDING))){
+                        eList.set(2*i, eList.get(2*i+1));
+                        eList.set(2*i+1, k);
+                    }
+                }
+                */
+                return;
+            }
+            for(int i = gap;i < eList.size(); i++){
+                int j = i;
+                E k = eList.get(i);
+                if((j >= gap) && (eList.get(i).compareTo(eList.get(j-gap)) < 0) && (order.equals(Order.ASCENDING))){
+                    eList.set(j, eList.get(j - gap));
+                    eList.set(j - gap, k);
+                }
+                while((j >= gap) && (eList.get(i).compareTo(eList.get(j-gap)) > 0) && (order.equals(Order.DESCENDING))){
+                    eList.set(j, eList.get(j - gap));
+                    eList.set(j-gap, k);
+                }
+
+            }
+            gap = gap/2;
+        }
+
+    }
+}
+
