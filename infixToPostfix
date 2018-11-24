@@ -1,0 +1,329 @@
+public class Stack<T>{
+    private Node node;
+    public Stack(int capacity){
+        node = new Node<T>(capacity);
+    }
+    public void push(T t) {
+        try{
+            node.push(t);
+        }catch(ArrayIndexOutOfBoundsException a){
+            System.out.println(a);
+        }
+    }
+    public T pop(){
+        try {
+            return (T) node.pop();
+        }catch(NullPointerException n) {
+            return null;
+        }
+    }
+    public boolean isEmpty(){
+        return node.isEmpty();
+    }
+    public T peek(){
+        try {
+            return (T) node.pop();
+        }catch(NullPointerException n){
+            System.out.println(n);
+            return null;
+        }
+        }
+    public int size(){ return node.size();}
+
+    private static class Node<T>{
+        private T top;
+        private T[] data;
+        private int size=0;
+        public Node(int capacity){
+            data =(T[]) new Object[capacity];
+
+        }
+        public int size(){
+            return size+1;
+        }
+
+        public boolean isEmpty(){
+            return size == 0;
+        }
+
+        public void push(T t) throws ArrayIndexOutOfBoundsException{
+            if(data.length <= size){
+                throw new ArrayIndexOutOfBoundsException("The stack is full.");
+            }
+            data[size] = t;
+            top = t;
+            size++;
+        }
+        public T pop() throws NullPointerException{
+            if(isEmpty()){
+                throw new NullPointerException("The stack is empty.");
+            }
+            size--;
+            top = data[size];
+            data[size] = null;
+            return top;
+        }
+        public T peek(T t)throws NullPointerException{
+            if(isEmpty()){
+                throw new NullPointerException("The stack is empty.");
+            }
+            return data[size];
+        }
+    }
+}
+
+public class InfixToPostfixConverter{
+    public String convert(char[] infix){
+        String fixSetUp = "";
+        for(int i = 0; i < infix.length; i++){
+            fixSetUp += infix[i];
+        }
+        fixSetUp = fullyParenthesize(fixSetUp);
+
+        return ToPostFix(fixSetUp);
+    }
+    private static String ToPostFix(String equation) {
+        int count = 0;
+        String element = "";
+        String postFix = "";
+        int operatorNumber = 0;
+        for (int i = 0; i < equation.length(); i++) {
+            if (equation.charAt(i) == '+' || equation.charAt(i) == '*' || equation.charAt(i) == '-' || equation.charAt(i) == '/')
+                operatorNumber++;
+        }
+        Stack<String> operator = new Stack<String>(operatorNumber);
+        for (int i = 0; i < equation.length(); i++) {
+            boolean endDigit = false;
+
+            //parenthesis
+            Stack<Character> parenthesis = new Stack<Character>(equation.length());
+            if (equation.charAt(i) == '(' || equation.charAt(i) == '{' || equation.charAt(i) == '[') {
+                element = "";
+                parenthesis.push(equation.charAt(i));
+                i++;
+                while (!parenthesis.isEmpty()) {
+                    if((equation.charAt(i) == ')') && (parenthesis.peek() == '(')){
+                        try {
+                            parenthesis.pop();
+                        }catch(NullPointerException n){
+                            element += equation.charAt(i);
+                            break;
+                        }
+                    }
+                    if((equation.charAt(i) == ']') && (parenthesis.peek() == '[')){
+                        try {
+                            parenthesis.pop();
+                        }catch(NullPointerException n){
+                            element += equation.charAt(i);
+                            break;
+                        }
+                    }
+                    if ((equation.charAt(i) == '}') && (parenthesis.peek() == '{')) {
+                        try {
+                            parenthesis.pop();
+                        }catch(NullPointerException n){
+                            element += equation.charAt(i);
+                            break;
+                        }
+                    }if(equation.charAt(i) == '(' || equation.charAt(i) == '{' || equation.charAt(i) == '[') {
+                        parenthesis.push(equation.charAt(i));
+                    }
+                    element += equation.charAt(i);
+                    i++;
+                }
+                postFix += ToPostFix(element);
+                count++;
+                element = "";
+            }
+            //digits
+            if(Character.isLetterOrDigit(equation.charAt(i)) || equation.charAt(i) == '.'){
+                if(i >= equation.length()-1){
+                    element += equation.substring(i, equation.length());
+                    endDigit = true;
+                }else if(Character.isDigit(equation.charAt(i+1))){
+                    element += equation.charAt(i);
+                }else{
+                    if(equation.charAt(i+1) == '.'){
+                        System.out.println("Multiple consecutive dots are not allowed.");
+                        System.exit(0);
+                    }
+                    element += equation.charAt(i);
+                    endDigit = true;
+                }
+            }if(endDigit == true){
+                postFix += element;
+                postFix += " ";
+                count++;
+                element = "";
+                //endDigit declaration sets it to false
+            }
+
+            //operation
+            if (count == 2) {
+                postFix += operator.pop();
+                postFix += " ";
+                count = 0;
+            }
+            //operator stack
+            if(equation.charAt(i) == '+' || equation.charAt(i) == '*' || equation.charAt(i) == '-' || equation.charAt(i) == '/'){
+                operator.push(Character.toString(equation.charAt(i)));
+            }
+        }
+        postFix += element;
+
+        while(!operator.isEmpty()){
+            postFix += operator.pop();
+            postFix += " ";
+        }
+        return postFix;
+    }
+    private static String fullyParenthesize(String infix) {
+        for (int i = 0; i < infix.length(); i++) {
+            if (infix.charAt(i) == '*' || infix.charAt(i) == '/') {
+                //find left expression
+                int leftPar;
+                int rightPar;
+                int j = i - 1;
+                if (infix.charAt(j) == ')') {
+                    int numRightPar = 0;
+                    while (j >= 0) {
+                        if(infix.charAt(j) == ')'){
+                            numRightPar++;
+                        }else if(infix.charAt(j) == '('){
+                            numRightPar--;
+                        }
+                        if(numRightPar == 0){
+                            break;
+                        }
+                        j--;
+                    }
+                    j++;
+
+                } else {
+                    while (j > 0 &&
+                            (Character.isDigit(infix.charAt(j)) || infix.charAt(j) == '.')) {
+                        j--;
+                    }
+                    if(j == 0){
+                        j = 0;
+                    }else{
+                        j++;
+                    }
+
+                }
+                leftPar = j;
+                j = i + 1;
+                if (infix.charAt(j) == '(') {
+                    int numLeftPar = 0;
+                    while (j < infix.length() && infix.charAt(j) != ')') {
+                        if(infix.charAt(j) == ')'){
+                            numLeftPar++;
+                        }else if(infix.charAt(j) == '('){
+                            numLeftPar--;
+                        }
+                        if(numLeftPar == 0){
+                            break;
+                        }
+                        j++;
+                    }
+
+
+                } else {
+                    while (j < infix.length() &&
+                            (Character.isDigit(infix.charAt(j)) || infix.charAt(j) == '.')) {
+                        j++;
+                    }
+                    j--;
+
+
+                }
+                rightPar = j + 1;
+                infix = infix.substring(0, leftPar) + "(" + infix.substring(leftPar, rightPar) + ")" + infix.substring(rightPar, infix.length());
+                i++;
+            }
+        }
+        return infix;
+    }
+
+}
+
+import java.util.Scanner;
+
+public class PostfixEvaluator {
+    public int evaluate(char[] postfix){
+        double denom;
+        String element = "";
+        Stack<Double> operands = new Stack<Double>(postfix.length);
+        String fixing = new String(postfix);
+        for(int i = 0; i < fixing.length() ; i++){
+            if(Character.isDigit(fixing.charAt(i))){
+                element += fixing.charAt(i);
+                while(!Character.isWhitespace(fixing.charAt(i+1))){
+                    i++;
+                    element += fixing.charAt(i);
+                }
+                operands.push(Double.parseDouble(element));
+                element = "";
+            }if(fixing.charAt(i) == '+'){
+                operands.push(operands.pop() + operands.pop());
+            }if(fixing.charAt(i) == '*'){
+                operands.push(operands.pop() * operands.pop());
+            }if(fixing.charAt(i) == '-'){
+                denom = operands.pop();
+                operands.push(operands.pop() - denom);
+            }if(fixing.charAt(i) == '/'){
+                denom = operands.pop();
+                if(denom == 0.0){
+                    throw new ArithmeticException("Division by Zero is undefind.");
+                }
+                operands.push(operands.pop() / denom);
+            }
+        }
+        return operands.pop().intValue();
+    }
+    public static void main(String[] args){
+        //for test: Stack<String> some = new Stack<String>();
+        String line;
+        String postfix = "";
+        boolean hasVariable = false;
+        InfixToPostfixConverter test = new InfixToPostfixConverter();
+        System.out.println("Input one infix expression per line. Input 'q' or 'Q' when finished: ");
+        Scanner in = new Scanner(System.in);
+        line = in.nextLine();
+        char[] equation = new char[line.length()];
+        while((!"q".equals(line))&&(!"Q".equals(line))) {
+            for (int i = 0; i < line.length(); i++) {
+                if (
+                        (Character.isDigit(line.charAt(i)) || (line.charAt(i) == '.') || (Character.isWhitespace(line.charAt(i)) ||
+                                (line.charAt(i) == '+') || (line.charAt(i) == '*') || (line.charAt(i) == '-') || (line.charAt(i) == '/') ||
+                                (line.charAt(i) == '(') || (line.charAt(i) == '{') || (line.charAt(i) == '[')) ||
+                                (line.charAt(i) == ')') || (line.charAt(i) == '}') || (line.charAt(i) == ']')
+                        )) {
+                    equation[i] = line.charAt(i);
+                }else if(Character.isLetter(line.charAt(i))){
+                    hasVariable = true;
+                    equation[i] = line.charAt(i);
+                }else {
+                    System.out.println("The input expression contains illegal elements");
+                    System.out.println("Input one infix expression per line. Input 'q' or 'Q' when finished: ");
+                    line = in.nextLine();
+                }
+            }
+            postfix = test.convert(equation);
+            System.out.println("The postfix expression is:" + postfix);
+            char[] chPostFix = new char[postfix.length()];
+            for (int i = 0; i < test.convert(equation).length(); i++) {
+                chPostFix[i] = postfix.charAt(i);
+            }
+            if (hasVariable == false) {
+                PostfixEvaluator evaluation = new PostfixEvaluator();
+                System.out.println("The infix expression is equivalent to:" + evaluation.evaluate(chPostFix));
+            }else {
+                System.out.println("The expression has variable. Therefore it can not be evaluated");
+            }
+            System.out.println("Input one infix expression per line. Input 'q' or 'Q' when finished: ");
+            line = in.nextLine();
+            equation = new char[line.length()];
+        }
+    }
+}
