@@ -1,0 +1,169 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
+
+public class FileToMapLoader{
+    public enum Order{NAME, PHONE, ORIGINAL}
+    public static final String FILEPATH = "sample.csv"; // absolute path of file
+    public static void main(String[] args) throws IOException{
+        System.out.println("Specify the ordering of the output (NAME, PHONE, or ORIGINAL): ");
+        String ordering = null;
+        Order OrderTrack;
+        String line = null;
+        try {
+            //determine the ordering of the output
+            BufferedReader SpecifyOrder = new BufferedReader(new InputStreamReader(System.in));
+            ordering = SpecifyOrder.readLine();
+            ordering = ordering.trim();
+            ordering = ordering.toUpperCase();
+            OrderTrack = Order.valueOf(ordering);
+
+            //construct Treemap and LinkedHashMap
+            TreeMap Tree = new TreeMap();
+            LinkedHashMap Hasher = new LinkedHashMap();
+            if(OrderTrack.equals(Order.NAME)){
+                Comparator<String> comparison = new StringComparator();
+                Tree = new TreeMap(comparison);
+            }else if(OrderTrack.equals(Order.PHONE)){
+                //comparator is natrual ordered
+                Tree = new TreeMap();
+            }else if(OrderTrack.equals(Order.ORIGINAL)){
+                //no comparator needed
+            }else{
+                throw new IOException("Specified ordering invalid.");
+
+            }
+
+            //read File
+            BufferedReader input = new BufferedReader(new FileReader(FILEPATH));
+            line = input.readLine();
+
+            //define values
+            String FirstName = "";
+            String PhoneString = "";
+            long PhoneNumber;
+            int k = 0;
+
+            //construct hashmap according to the data
+            while(line != null) {
+                if((line != "\n") && !(line.equals("")) ) {
+                    if (OrderTrack.equals(Order.NAME)) {
+                        FirstName = "";
+                        int i = 0;
+                        while (line.charAt(i) != ',') {
+                            FirstName += line.charAt(i);
+                            i++;
+                        }
+                        Tree.put(FirstName, line);
+
+                    }
+                    if (OrderTrack.equals(Order.PHONE)) {
+                        int i = 0;
+
+                        PhoneString = "";
+                        PhoneNumber = 0;
+
+                        //jump through names
+                        while (line.charAt(i) != ',') {
+                            i++;
+                        }
+                        //iterate the phone number and take out brackets
+                        for (int j = i + 1; j < line.length(); j++) {
+                            PhoneString += line.charAt(j);
+                        }
+                        PhoneString = PhoneString.replaceAll("[^0-9]", "");
+                        PhoneString = PhoneString.trim();
+                        PhoneNumber = Long.valueOf(PhoneString);
+
+                        Tree.put(PhoneNumber, line);
+                    }
+                    if(OrderTrack.equals(Order.ORIGINAL)){
+                        Hasher.put(k, line);
+                        k++;
+                    }
+                }
+                line = input.readLine();
+            }
+
+            if(OrderTrack.equals(Order.ORIGINAL)){
+                for(int h = 0; h < Hasher.size(); h++){
+                    System.out.println(Hasher.get(h));
+                }
+            }else {
+                while (!Tree.isEmpty()) {
+                    System.out.println(Tree.firstEntry());
+                    Tree.remove(Tree.firstKey());
+                }
+            }
+        }catch(IOException e){
+            System.out.println("I/O error: "+ e);
+        }
+
+    }
+    static class StringComparator implements Comparator<String>{
+        public int compare(String o1, String o2){
+            return o1.compareTo(o2);
+        }
+    }
+}
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+
+public class WordCounter {
+    public static final String FILEPATH = "countingTest"; // absolute path of file
+    public static void main(String[] args) {
+        try {
+            String line;
+            String[]  SplitLine = null;
+            int HighestFreq = 0;
+            BufferedReader reading = new BufferedReader(new FileReader(FILEPATH));
+
+            //initialization
+            line = reading.readLine();
+            reading = new BufferedReader(new FileReader(FILEPATH));
+            Map<String, Integer> Hashing = new LinkedHashMap<String, Integer>();
+
+            //constructing texts
+            line = reading.readLine();
+            while (line != null) {
+                line = line.replaceAll("\\p{Punct}", "");
+                SplitLine = line.split("\\s+");
+                for (int i = 0; i < SplitLine.length; i++) {
+                    if(Hashing.get(SplitLine[i]) == null) {
+                        Hashing.put(SplitLine[i], 1);
+                    }else {
+                        Hashing.put(SplitLine[i], Hashing.get(SplitLine[i]) + 1);
+                    }
+                    if(Hashing.get(SplitLine[i]) > HighestFreq){
+                        HighestFreq = Hashing.get(SplitLine[i]);
+                    }
+                }
+                line = reading.readLine();
+            }
+
+            //printing output
+            while(HighestFreq >= 0) {
+                Set<String> keys = Hashing.keySet();
+                for(String k:keys){
+                    if((Hashing.get(k) != null)&&(Hashing.get(k) == HighestFreq)){
+                        System.out.printf("%-10s %5s \n", k, Hashing.get(k));
+
+                    }
+                }
+                HighestFreq--;
+            }
+        }catch(IOException e){
+            System.out.println("I/O error: "+ e);
+        }
+    }
+}
